@@ -1,4 +1,4 @@
 #!/bin/bash
-set -a; source /home/bryanchasko/mcp-launchers/.env; set +a
-export GITHUB_TOKEN=$(gh auth token 2>/dev/null || echo "$GITHUB_PERSONAL_ACCESS_TOKEN")
+# GITHUB_TOKEN sourced from ~/.secrets via shell env — no .env file needed
+export GITHUB_TOKEN="${GITHUB_TOKEN:-$(gh auth token 2>/dev/null)}"
 exec python3 /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/utils/github-wrapper.py
