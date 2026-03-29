@@ -1,8 +1,13 @@
 import subprocess, sys, os, threading
 
+token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN', '')
+if not token:
+    sys.stderr.write('github-wrapper: GITHUB_TOKEN not set — extension will fail\n')
+    sys.exit(1)
+
 proc = subprocess.Popen(
     ['docker', 'run', '-i', '--rm',
-     '-e', 'GITHUB_PERSONAL_ACCESS_TOKEN=' + os.environ.get('GITHUB_PERSONAL_ACCESS_TOKEN', ''),
+     '-e', 'GITHUB_PERSONAL_ACCESS_TOKEN=' + token,
      'ghcr.io/github/github-mcp-server', 'stdio'],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
 )
