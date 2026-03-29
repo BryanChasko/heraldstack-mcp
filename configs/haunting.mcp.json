@@ -1,0 +1,37 @@
+{
+  "_comment": "Canonical haunting platform config — kiro-cli sessions. Uses run.sh dispatcher pattern: on rocm-aibox executes locally, on other machines SSH-tunnels. docker-mcp removed (broken on Linux Engine). Paths relative to hauntingkirocli repo root.",
+  "mcpServers": {
+    "github": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh github.sh"]
+    },
+    "context7": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh context7.sh"]
+    },
+    "openrouter": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh openrouter.sh"]
+    },
+    "rocm-filesystem": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh filesystem-rocm-code.sh"]
+    },
+    "macmini-filesystem": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh filesystem-macmini.sh"]
+    },
+    "aws-docs": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh aws-docs.sh"]
+    },
+    "well-architected": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh well-architected.sh"]
+    },
+    "jupyter": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh jupyter.sh"]
+    }
+  }
+}

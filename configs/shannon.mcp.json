@@ -1,0 +1,41 @@
+{
+  "_comment": "Canonical shannon platform config — full toolset for Claude Code sessions in gander context. Paths point to heraldstack-mcp/launchers/. Run migration before switching from ~/mcp-launchers/ paths.",
+  "mcpServers": {
+    "github": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/github.sh"]
+    },
+    "context7": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/context7.sh"]
+    },
+    "openrouter": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/models/openrouter.sh"]
+    },
+    "rocm-filesystem": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/filesystem/filesystem-rocm-code.sh"]
+    },
+    "macmini-filesystem": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/filesystem/filesystem-macmini.sh"]
+    },
+    "qdrant-writing": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/qdrant/qdrant-author.sh"]
+    },
+    "qdrant-inbox": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/qdrant/qdrant-writing-inbox.sh"]
+    },
+    "qdrant-shared": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/qdrant/qdrant-shared-knowledge.sh"]
+    },
+    "valkey": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/memory/valkey-mcp.sh"]
+    }
+  }
+}

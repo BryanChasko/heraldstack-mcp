@@ -1,0 +1,13 @@
+{
+  "_comment": "Minimal dev config — shannonclaudecodecli daily use. github + context7 only. docker-mcp excluded (broken on Linux Engine, babashka NPE). Expand to shannon.mcp.json for full toolset.",
+  "mcpServers": {
+    "github": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/github.sh"]
+    },
+    "context7": {
+      "command": "bash",
+      "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/context7.sh"]
+    }
+  }
+}

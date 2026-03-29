@@ -1,0 +1,78 @@
+# gander-session.yaml — Canonical goose-cli extension config.
+# Sourced by goose-fallback.sh at container start via write_config().
+# This file mirrors gandergoosecli/goose-extensions.yaml.
+# When heraldstack-mcp migration completes, goose-fallback.sh should source
+# THIS file instead of goose-extensions.yaml.
+#
+# Path convention: /home/bryanchasko/mcp-launchers/<script>
+# After migration: /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/<domain>/<script>
+
+extensions:
+  developer:
+    enabled: true
+    type: builtin
+    name: developer
+    timeout: 600
+
+  apps:
+    enabled: false
+    type: builtin
+    name: apps
+
+  analyze:
+    enabled: false
+    type: builtin
+    name: analyze
+
+  extensionmanager:
+    enabled: false
+    type: builtin
+    name: extensionmanager
+
+  github:
+    enabled: true
+    type: stdio
+    name: github
+    cmd: /home/bryanchasko/mcp-launchers/github.sh
+    args: []
+    timeout: 300
+
+  context7:
+    enabled: true
+    type: stdio
+    name: context7
+    cmd: /home/bryanchasko/mcp-launchers/context7.sh
+    args: []
+    timeout: 300
+
+  qdrant-writing:
+    enabled: true
+    type: stdio
+    name: qdrant-writing
+    cmd: /home/bryanchasko/mcp-launchers/qdrant-author.sh
+    args: []
+    timeout: 300
+
+  qdrant-inbox:
+    enabled: true
+    type: stdio
+    name: qdrant-inbox
+    cmd: /home/bryanchasko/mcp-launchers/qdrant-writing-inbox.sh
+    args: []
+    timeout: 300
+
+  qdrant-shared:
+    enabled: true
+    type: stdio
+    name: qdrant-shared
+    cmd: /home/bryanchasko/mcp-launchers/qdrant-shared-knowledge.sh
+    args: []
+    timeout: 300
+
+  valkey:
+    enabled: true
+    type: stdio
+    name: valkey
+    cmd: /home/bryanchasko/mcp-launchers/valkey-mcp.sh
+    args: []
+    timeout: 120

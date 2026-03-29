@@ -1,0 +1,713 @@
+# heraldstack-mcp registry.yaml
+# Master launcher index for all HeraldStack MCP tooling.
+# Source of truth: replaces scattered ~/mcp-launchers/*.sh metadata.
+#
+# Fields:
+#   name:           canonical server key (matches .mcp.json server key)
+#   description:    one-line purpose
+#   launcher:       path relative to heraldstack-mcp repo root
+#   runtime:        docker | npx | uvx | node | sshfs+npx | dispatcher | broken
+#   image:          docker image or npm package (omit for node/uvx)
+#   baked:          true = local tagged image; false = registry pull; null = N/A
+#   session_wired:  platforms auto-loading this server (shannon | haunting | gander)
+#   env_required:   env var keys sourced from ~/mcp-launchers/.env or host env
+#   status:         active | broken | unwired | deprecated
+#   notes:          operational context, known issues, build requirements
+
+# ---------------------------------------------------------------------------
+# CORE — wired across all platforms
+# ---------------------------------------------------------------------------
+
+- name: github
+  description: "GitHub API MCP — issues, PRs, branches, code search, reviews"
+  launcher: launchers/core/github.sh
+  runtime: docker
+  image: ghcr.io/github/github-mcp-server
+  baked: false
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+  env_required:
+    - GITHUB_PERSONAL_ACCESS_TOKEN
+  status: active
+  notes: >
+    3-process chain: bash -> python3 github-wrapper.py -> docker run ghcr.io/github/github-mcp-server.
+    github-wrapper.py manages container lifecycle and token injection.
+    Pre-pull image at session start to avoid cold-start latency.
+    Token resolved from gh CLI (gh auth token) with fallback to GITHUB_PERSONAL_ACCESS_TOKEN.
+
+- name: context7
+  description: "Context7 library documentation MCP — real-time SDK and framework docs"
+  launcher: launchers/core/context7.sh
+  runtime: npx
+  image: "@upstash/context7-mcp"
+  baked: false
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+  env_required:
+    - CLIENT_IP_ENCRYPTION_KEY
+  status: active
+  notes: >
+    Uses npx --prefer-offline to avoid network calls when cached.
+    Requires nvm-managed Node at /home/bryanchasko/.nvm/versions/node/v24.14.0/bin.
+    CLIENT_IP_ENCRYPTION_KEY sourced from ~/mcp-launchers/.env.
+
+# ---------------------------------------------------------------------------
+# KNOWLEDGE — qdrant vector stores
+# ---------------------------------------------------------------------------
+
+- name: qdrant-writing
+  description: "Qdrant MCP — copywriting collection (author vector store)"
+  launcher: launchers/qdrant/qdrant-author.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired:
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Targets COLLECTION_NAME=copywriting on localhost:6333.
+    Uses baked local image qdrant-mcp-baked:latest — must be built before use.
+    qdrant-author.sh hardcodes copywriting collection directly (does not call qdrant.sh dispatcher).
+
+- name: qdrant-inbox
+  description: "Qdrant MCP — writing-inbox collection"
+  launcher: launchers/qdrant/qdrant-writing-inbox.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired:
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Thin wrapper calling qdrant.sh writing-inbox.
+    Targets COLLECTION_NAME=writing-inbox on localhost:6333.
+    MIGRATION NOTE: wrapper calls absolute path ~/mcp-launchers/qdrant.sh — update to
+    heraldstack-mcp/launchers/qdrant/qdrant.sh after migration.
+
+- name: qdrant-shared
+  description: "Qdrant MCP — shared-knowledge collection"
+  launcher: launchers/qdrant/qdrant-shared-knowledge.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired:
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Thin wrapper calling qdrant.sh shared-knowledge.
+    Targets COLLECTION_NAME=shared-knowledge on localhost:6333.
+    MIGRATION NOTE: wrapper calls absolute path ~/mcp-launchers/qdrant.sh — update after migration.
+
+- name: qdrant-otel-expert
+  description: "Qdrant MCP — otel-expert collection (OTel tracing knowledge base)"
+  launcher: launchers/qdrant/qdrant-otel-expert.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand / recipe use only. Not auto-loaded in any platform session.
+    Thin wrapper calling qdrant.sh otel-expert.
+
+- name: qdrant-ollama-expert
+  description: "Qdrant MCP — ollama-expert collection (Ollama API knowledge base)"
+  launcher: launchers/qdrant/qdrant-ollama-expert.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand / recipe use only. Not auto-loaded in any platform session.
+    Thin wrapper calling qdrant.sh ollama-expert.
+
+- name: qdrant-multi
+  description: "Qdrant MCP — multi-collection mode (enumerates all collections)"
+  launcher: launchers/qdrant/qdrant-multi.sh
+  runtime: docker
+  image: qdrant-mcp-baked:latest
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand / recipe use only. No COLLECTION_NAME — server enumerates all collections.
+    Useful for cross-collection search. Not session-wired to avoid context bloat.
+    Standalone script — does not call qdrant.sh dispatcher.
+
+# Internal qdrant dispatcher (not a registered MCP server):
+# launchers/qdrant/qdrant.sh — parameterized by collection name.
+# All named qdrant-*.sh thin wrappers call this dispatcher.
+
+# ---------------------------------------------------------------------------
+# MEMORY & STATE
+# ---------------------------------------------------------------------------
+
+- name: valkey
+  description: "Valkey/Redis MCP — session state, key-value store, pub/sub"
+  launcher: launchers/memory/valkey-mcp.sh
+  runtime: uvx
+  image: "awslabs.valkey-mcp-server"
+  baked: false
+  session_wired:
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Uses uvx awslabs.valkey-mcp-server@latest.
+    Requires uv/uvx at /home/bryanchasko/.local/bin.
+    VALKEY_HOST and VALKEY_PORT injected by docker-compose for the goose container.
+    Connects to valkey sidecar in the goose docker-compose stack.
+
+- name: session-memory
+  description: "In-process MCP memory server — ephemeral key-value for session context"
+  launcher: launchers/memory/session-memory.sh
+  runtime: docker
+  image: "node:22-slim (npx @modelcontextprotocol/server-memory)"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand only. Runs npx -y @modelcontextprotocol/server-memory inside node:22-slim.
+    Very slow on first start (no cache in container). Consider baking.
+    Ephemeral — no persistence across container restarts.
+
+# ---------------------------------------------------------------------------
+# MODEL DISCOVERY
+# ---------------------------------------------------------------------------
+
+- name: openrouter
+  description: "OpenRouter model discovery MCP — list_models, pricing, provider comparison"
+  launcher: launchers/models/openrouter.sh
+  runtime: node
+  image: null
+  baked: null
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Executes local clone at /home/bryanchasko/code/mcp-openrouter/src/index.js.
+    Source: https://github.com/Hulupeep/mcp-openrouter.
+    No API key required — reads OpenRouter public catalog.
+
+# ---------------------------------------------------------------------------
+# FILESYSTEM
+# ---------------------------------------------------------------------------
+
+- name: rocm-filesystem
+  description: "Filesystem MCP — /home/bryanchasko/code mounted at /projects/code"
+  launcher: launchers/filesystem/filesystem-rocm-code.sh
+  runtime: docker
+  image: mcp/filesystem:latest
+  baked: false
+  session_wired:
+    - shannon
+    - haunting
+  env_required: []
+  status: active
+  notes: >
+    Mounts /home/bryanchasko/code into container as /projects/code.
+    Registry pull: mcp/filesystem:latest.
+
+- name: macmini-filesystem
+  description: "Filesystem MCP — Mac mini /Users/bryanchasko via sshfs + npx"
+  launcher: launchers/filesystem/filesystem-macmini.sh
+  runtime: sshfs+npx
+  image: "@modelcontextprotocol/server-filesystem"
+  baked: false
+  session_wired:
+    - shannon
+    - haunting
+  env_required: []
+  status: active
+  notes: >
+    Mounts Bryans-Mac-mini.local via sshfs to /mnt/mac-mini before starting npx server.
+    SSH key: /home/bryanchasko/.ssh/id_ed25519.
+    Will fail silently if Mac mini is unreachable — no retry logic.
+    Serves /mnt/mac-mini/Code.
+
+- name: filesystem-ollama-expert
+  description: "Filesystem MCP — Mac mini /Code (Ollama expert recipe context)"
+  launcher: launchers/filesystem/filesystem-ollama-expert.sh
+  runtime: npx
+  image: "@modelcontextprotocol/server-filesystem"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for Ollama expert recipe sessions.
+    Assumes /mnt/mac-mini already mounted (no sshfs call).
+    Uses npx --prefer-offline.
+    Consolidation candidate with filesystem-chrome-extension — same roots.
+
+- name: filesystem-design-web
+  description: "Filesystem MCP — Mac mini /Code and /home/bryanchasko (design+web recipe)"
+  launcher: launchers/filesystem/filesystem-design-web.sh
+  runtime: npx
+  image: "@modelcontextprotocol/server-filesystem"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for design/web recipe sessions. Serves two roots: /mnt/mac-mini and /home/bryanchasko.
+    Assumes /mnt/mac-mini already mounted.
+    Uses npx --prefer-offline.
+
+- name: filesystem-chrome-extension
+  description: "Filesystem MCP — Mac mini /Code (Chrome extension recipe context)"
+  launcher: launchers/filesystem/filesystem-chrome-extension.sh
+  runtime: npx
+  image: "@modelcontextprotocol/server-filesystem"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for Chrome extension recipe sessions.
+    Consolidation candidate with filesystem-ollama-expert — identical roots.
+    Assumes /mnt/mac-mini already mounted.
+
+- name: filesystem-video-analyst
+  description: "Filesystem MCP — Mac mini /Downloads and /mcp (video analyst recipe)"
+  launcher: launchers/filesystem/filesystem-video-analyst.sh
+  runtime: npx
+  image: "@modelcontextprotocol/server-filesystem"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for video analyst recipe sessions. Serves two roots.
+    Assumes /mnt/mac-mini already mounted.
+
+# ---------------------------------------------------------------------------
+# BROWSER AUTOMATION
+# ---------------------------------------------------------------------------
+
+- name: stagehand
+  description: "Stagehand browser automation MCP — Playwright-based web interaction"
+  launcher: launchers/browser/stagehand.sh
+  runtime: docker
+  image: "node:22-slim (npx @browserbasehq/stagehand-mcp)"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand only. Very slow first start — no cached npx layer in node:22-slim.
+    Requires network for npx pull. Baking recommended.
+    --network=host required for browser-to-localhost access.
+
+- name: jaeger-ui-stagehand
+  description: "Jaeger UI browser automation MCP via Stagehand"
+  launcher: launchers/browser/jaeger-ui-stagehand.sh
+  runtime: docker
+  image: "node:22-slim (npx stagehand-mcp)"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for Jaeger UI interaction during tracing recipes.
+    Different npx package from stagehand.sh (stagehand-mcp vs @browserbasehq/stagehand-mcp).
+    --network=host required. Slow startup.
+
+# ---------------------------------------------------------------------------
+# OBSERVABILITY
+# ---------------------------------------------------------------------------
+
+- name: live-trace-jaeger
+  description: "Jaeger trace query MCP — live OTel trace inspection"
+  launcher: launchers/observability/live-trace-jaeger.sh
+  runtime: docker
+  image: jaeger-mcp:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand for OTel recipe sessions. Connects to Jaeger at localhost:16686.
+    Uses baked local image jaeger-mcp:x86 (x86-tagged build).
+    --network=host required. Build required before first use.
+
+# ---------------------------------------------------------------------------
+# MEDIA & AI PROCESSING
+# ---------------------------------------------------------------------------
+
+- name: ffmpeg-mcp
+  description: "FFmpeg MCP — video/audio processing operations"
+  launcher: launchers/media/ffmpeg-mcp.sh
+  runtime: docker
+  image: ffmpeg-mcp:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image ffmpeg-mcp:x86 (x86-tagged build).
+    Build required before first use.
+
+- name: video-transcriber
+  description: "Video transcription MCP — speech-to-text from video files"
+  launcher: launchers/media/video-transcriber.sh
+  runtime: docker
+  image: video-transcriber:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image video-transcriber:x86.
+    Build required before first use.
+
+- name: vision-server
+  description: "Vision MCP — image analysis and description"
+  launcher: launchers/media/vision-server.sh
+  runtime: docker
+  image: vision-server:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image vision-server:x86.
+    Build required before first use.
+
+- name: pdf-reader
+  description: "PDF reader MCP — reads and extracts text from PDF documents"
+  launcher: launchers/media/pdf-reader.sh
+  runtime: docker
+  image: "node:22-slim (npx @upstash/pdf-reader-mcp)"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Mounts /mnt/mac-mini/Documents as /documents inside container.
+    Assumes /mnt/mac-mini already mounted.
+    Slow startup — no npx cache in node:22-slim.
+
+# ---------------------------------------------------------------------------
+# NOTEBOOKS & DATA
+# ---------------------------------------------------------------------------
+
+- name: jupyter
+  description: "Jupyter notebook MCP — notebook execution and cell management"
+  launcher: launchers/data/jupyter.sh
+  runtime: docker
+  image: mcp-jupyter-server:latest
+  baked: true
+  session_wired:
+    - haunting
+  env_required: []
+  status: active
+  notes: >
+    Uses baked local image mcp-jupyter-server:latest.
+    Build required before first use.
+    Session-wired to haunting only; not carried into shannon or gander by default.
+
+- name: notebook-mcp
+  description: "Notebook MCP — persistent notebook operations with volume-backed data"
+  launcher: launchers/data/notebook-mcp.sh
+  runtime: docker
+  image: notebook-mcp:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image notebook-mcp:x86.
+    Mounts named volume notebook-data:/data.
+    Build required before first use.
+
+- name: sqlite
+  description: "SQLite MCP — query and manage SQLite databases"
+  launcher: launchers/data/sqlite.sh
+  runtime: docker
+  image: sqlite-mcp:latest
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image sqlite-mcp:latest.
+    DB: /home/bryanchasko/code/learning/deep-agents-from-scratch/data/mcp_shared/agents.db.
+    Build: docker build -f gandergoosecli/Dockerfile.sqlite-mcp -t sqlite-mcp:latest.
+
+# ---------------------------------------------------------------------------
+# AWS
+# ---------------------------------------------------------------------------
+
+- name: aws-docs
+  description: "AWS documentation MCP — search and retrieve AWS service docs"
+  launcher: launchers/aws/aws-docs.sh
+  runtime: docker
+  image: mcp/aws-documentation-mcp-server:latest
+  baked: false
+  session_wired:
+    - haunting
+  env_required: []
+  status: active
+  notes: >
+    Registry pull. No AWS credentials required — public documentation only.
+
+- name: well-architected
+  description: "AWS Well-Architected security MCP — framework guidance and security checks"
+  launcher: launchers/aws/well-architected.sh
+  runtime: docker
+  image: mcp/well-architected-security-mcp-server:latest
+  baked: false
+  session_wired:
+    - haunting
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    Mounts ~/.aws read-only. AWS_PROFILE defaults to 'default', AWS_REGION to us-east-1.
+    Registry pull.
+
+- name: aws-iac
+  description: "AWS IaC MCP — CloudFormation and CDK infrastructure-as-code tooling"
+  launcher: launchers/aws/aws-iac.sh
+  runtime: docker
+  image: mcp/aws-iac-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+- name: aws-api
+  description: "AWS API MCP — service API operations via AWS SDK"
+  launcher: launchers/aws/aws-api.sh
+  runtime: docker
+  image: mcp/aws-api-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+- name: cloudtrail
+  description: "AWS CloudTrail MCP — audit log query and event inspection"
+  launcher: launchers/aws/cloudtrail.sh
+  runtime: docker
+  image: mcp/cloudtrail-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+- name: cost-explorer
+  description: "AWS Cost Explorer MCP — cost and usage reporting"
+  launcher: launchers/aws/cost-explorer.sh
+  runtime: docker
+  image: mcp/cost-explorer-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+- name: billing
+  description: "AWS Billing and Cost Management MCP — billing data and cost allocation"
+  launcher: launchers/aws/billing.sh
+  runtime: docker
+  image: mcp/billing-cost-management-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+- name: lambda
+  description: "AWS Lambda MCP — function management, invocation, and log retrieval"
+  launcher: launchers/aws/lambda.sh
+  runtime: docker
+  image: mcp/lambda-mcp-server:latest
+  baked: false
+  session_wired: []
+  env_required:
+    - AWS_PROFILE
+    - AWS_REGION
+  status: active
+  notes: >
+    On-demand. Mounts ~/.aws read-only. Registry pull.
+
+# ---------------------------------------------------------------------------
+# LOCAL AI
+# ---------------------------------------------------------------------------
+
+- name: ollama-mcp
+  description: "Ollama MCP — model listing, generate, and chat against local Ollama"
+  launcher: launchers/localai/ollama-mcp.sh
+  runtime: docker
+  image: "node:22-slim (npx ollama-mcp-server)"
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Connects to OLLAMA_HOST=http://localhost:11434.
+    --network=host required. Slow startup — unbaked node:22-slim.
+
+# ---------------------------------------------------------------------------
+# PLATFORM-SPECIFIC / EXPERIMENTAL
+# ---------------------------------------------------------------------------
+
+- name: gooseai-mcp
+  description: "GooseAI MCP — goose-cli agent orchestration tooling"
+  launcher: launchers/platform/gooseai-mcp.sh
+  runtime: docker
+  image: gooseai-mcp-server
+  baked: true
+  session_wired: []
+  env_required:
+    - GOOSEAI_API_KEY
+    - OPENROUTER_API_KEY
+  status: active
+  notes: >
+    On-demand. Uses baked local image gooseai-mcp-server.
+    BLOCKER: GOOSEAI_API_KEY is NOT present in ~/mcp-launchers/.env — must be added before use.
+    OPENROUTER_API_KEY passed from host environment (sourced from ~/.secrets at session launch).
+
+- name: persona-mcp
+  description: "Persona MCP — agent persona management and profile loading"
+  launcher: launchers/platform/persona-mcp.sh
+  runtime: docker
+  image: persona-mcp:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image persona-mcp:x86.
+    Exposes port 3010. Mounts named volume persona-data:/data.
+    Build required before first use.
+
+- name: prompt-crafter-mcp
+  description: "Prompt Crafter MCP — structured prompt construction and templating"
+  launcher: launchers/platform/prompt-crafter-mcp.sh
+  runtime: docker
+  image: prompt-crafter-mcp:x86
+  baked: true
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    On-demand. Uses baked local image prompt-crafter-mcp:x86.
+    Exposes port 3013.
+    Build required before first use.
+
+# ---------------------------------------------------------------------------
+# BROKEN
+# ---------------------------------------------------------------------------
+
+- name: docker-mcp
+  description: "Docker container management MCP"
+  launcher: launchers/broken/docker-mcp.sh
+  runtime: broken
+  image: mcp/docker
+  baked: false
+  session_wired: []
+  env_required: []
+  status: broken
+  notes: >
+    BROKEN on Linux Docker Engine (without Docker Desktop).
+    babashka.curl NPE at startup: curl Nix-resolved at image build time to a
+    non-existent store path on Linux Engine.
+    Workaround requires Docker Desktop 4.59+ MCP Toolkit or docker mcp gateway run.
+    Do NOT add to prod configs until fixed.
+
+# ---------------------------------------------------------------------------
+# DEPRECATED
+# ---------------------------------------------------------------------------
+
+- name: github-filter
+  description: "GitHub event filter wrapper — dead code, competing Python wrapper"
+  launcher: launchers/deprecated/github-filter.py
+  runtime: null
+  image: null
+  baked: null
+  session_wired: []
+  env_required: []
+  status: deprecated
+  notes: >
+    Dead code. Python wrapper competing with github-wrapper.py.
+    Not a valid MCP server launcher. Do not wire. Candidate for deletion.
+
+# ---------------------------------------------------------------------------
+# UTILITY (not MCP servers — no .mcp.json wiring)
+# ---------------------------------------------------------------------------
+
+- name: mount-mac-mini
+  description: "sshfs mount utility — mounts Mac mini to /mnt/mac-mini (NOT an MCP server)"
+  launcher: launchers/utility/mount-mac-mini.sh
+  runtime: sshfs+npx
+  image: null
+  baked: null
+  session_wired: []
+  env_required: []
+  status: active
+  notes: >
+    NOT an MCP server. Prerequisite utility for all macmini filesystem launchers.
+    Run standalone to pre-mount. filesystem-macmini.sh calls mountpoint check inline.
+
+- name: run-dispatcher
+  description: "SSH dispatcher — routes launcher scripts to rocm-aibox (NOT an MCP server)"
+  launcher: launchers/utility/run.sh
+  runtime: dispatcher
+  image: null
+  baked: null
+  session_wired:
+    - haunting
+  env_required: []
+  status: active
+  notes: >
+    NOT a standalone MCP server. The haunting platform dispatcher.
+    On rocm-aibox: executes the named script locally.
+    On other machines: SSH-tunnels to bryanchasko@rocm-aibox.local.
+    hauntingkirocli .mcp.json wraps all entries as: run.sh <launcher-name>.
+
+# ---------------------------------------------------------------------------
+# REGISTRY METADATA
+# ---------------------------------------------------------------------------
+# Audited: 43 .sh files in ~/mcp-launchers/ (as of 2026-03-29)
+# Named MCP server entries: 40
+# Internal dispatchers (not MCP entries): qdrant.sh, run.sh
+# Deprecated non-launchers: github-filter.py
+# Status: active=37, broken=1, deprecated=1
+# Next: reconcile any new launchers added after this audit date.
