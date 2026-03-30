@@ -69,10 +69,16 @@
     - gander
   env_required: []
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-copywriting
+  transport:
+    http: "http://localhost:8100/mcp"
+    bridge: launchers/bridges/qdrant-copywriting-bridge.sh
   notes: >
-    Targets COLLECTION_NAME=copywriting on localhost:6333.
-    Uses baked local image qdrant-mcp-baked:latest — must be built before use.
-    qdrant-author.sh hardcodes copywriting collection directly (does not call qdrant.sh dispatcher).
+    Persistent HTTP endpoint via heraldstack-infra compose.
+    Native streamable-http transport (fastmcp 2.7.0).
+    Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
+    Legacy launcher retained for fallback.
 
 - name: qdrant-inbox
   description: "Qdrant MCP — writing-inbox collection"
@@ -84,11 +90,16 @@
     - gander
   env_required: []
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-writing-inbox
+  transport:
+    http: "http://localhost:8101/mcp"
+    bridge: launchers/bridges/qdrant-writing-inbox-bridge.sh
   notes: >
-    Thin wrapper calling qdrant.sh writing-inbox.
-    Targets COLLECTION_NAME=writing-inbox on localhost:6333.
-    MIGRATION NOTE: wrapper calls absolute path ~/mcp-launchers/qdrant.sh — update to
-    heraldstack-mcp/launchers/qdrant/qdrant.sh after migration.
+    Persistent HTTP endpoint via heraldstack-infra compose.
+    Native streamable-http transport (fastmcp 2.7.0).
+    Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
+    Legacy launcher retained for fallback.
 
 - name: qdrant-shared
   description: "Qdrant MCP — shared-knowledge collection"
@@ -100,10 +111,16 @@
     - gander
   env_required: []
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-shared-knowledge
+  transport:
+    http: "http://localhost:8102/mcp"
+    bridge: launchers/bridges/qdrant-shared-knowledge-bridge.sh
   notes: >
-    Thin wrapper calling qdrant.sh shared-knowledge.
-    Targets COLLECTION_NAME=shared-knowledge on localhost:6333.
-    MIGRATION NOTE: wrapper calls absolute path ~/mcp-launchers/qdrant.sh — update after migration.
+    Persistent HTTP endpoint via heraldstack-infra compose.
+    Native streamable-http transport (fastmcp 2.7.0).
+    Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
+    Legacy launcher retained for fallback.
 
 - name: qdrant-otel-expert
   description: "Qdrant MCP — otel-expert collection (OTel tracing knowledge base)"
@@ -163,11 +180,18 @@
     - gander
   env_required: []
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-valkey
+  transport:
+    http: "http://localhost:8110/mcp"
+    healthcheck: "http://localhost:8110/healthz"
+    bridge: launchers/bridges/valkey-bridge.sh
   notes: >
-    Uses uvx awslabs.valkey-mcp-server@latest.
-    Requires uv/uvx at /home/bryanchasko/.local/bin.
-    VALKEY_HOST and VALKEY_PORT injected by docker-compose for the goose container.
-    Connects to valkey sidecar in the goose docker-compose stack.
+    Persistent HTTP endpoint via heraldstack-infra compose.
+    Wrapped by supergateway (valkey-mcp-http:latest baked image).
+    Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
+    Valkey backing service now in heraldstack-infra (extracted from goose stack).
+    Legacy uvx launcher retained for fallback.
 
 - name: session-memory
   description: "In-process MCP memory server — ephemeral key-value for session context"
@@ -341,10 +365,18 @@
   session_wired: []
   env_required: []
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-jaeger
+  transport:
+    http: "http://localhost:8120/mcp"
+    healthcheck: "http://localhost:8120/healthz"
+    bridge: launchers/bridges/jaeger-bridge.sh
   notes: >
-    On-demand for OTel recipe sessions. Connects to Jaeger at localhost:16686.
-    Uses baked local image jaeger-mcp:x86 (x86-tagged build).
-    --network=host required. Build required before first use.
+    Persistent HTTP endpoint via heraldstack-infra compose.
+    Wrapped by supergateway (node available in jaeger-mcp:x86 image).
+    Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
+    Jaeger backing service now in heraldstack-infra (replaces missing heraldstack-tracing).
+    Legacy launcher retained for fallback.
 
 # ---------------------------------------------------------------------------
 # MEDIA & AI PROCESSING
@@ -703,11 +735,93 @@
     hauntingkirocli .mcp.json wraps all entries as: run.sh <launcher-name>.
 
 # ---------------------------------------------------------------------------
+# BRIDGES — stdio-to-HTTP adapters for stdio-only frameworks
+# ---------------------------------------------------------------------------
+# These are not standalone MCP servers. They are thin supergateway client
+# scripts that connect to persistent HTTP endpoints in heraldstack-infra.
+# Used by goose, kiro, and gemini (stdio-only frameworks).
+# Claude Code connects directly via type: http — no bridge needed.
+
+- name: qdrant-copywriting-bridge
+  description: "Stdio bridge to persistent mcp-qdrant-copywriting HTTP endpoint"
+  launcher: launchers/bridges/qdrant-copywriting-bridge.sh
+  runtime: npx
+  image: "supergateway (client mode)"
+  baked: false
+  session_wired:
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Connects to http://localhost:8100/mcp via supergateway --streamableHttp.
+    Requires heraldstack-infra compose to be running.
+
+- name: qdrant-writing-inbox-bridge
+  description: "Stdio bridge to persistent mcp-qdrant-writing-inbox HTTP endpoint"
+  launcher: launchers/bridges/qdrant-writing-inbox-bridge.sh
+  runtime: npx
+  image: "supergateway (client mode)"
+  baked: false
+  session_wired:
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Connects to http://localhost:8101/mcp via supergateway --streamableHttp.
+
+- name: qdrant-shared-knowledge-bridge
+  description: "Stdio bridge to persistent mcp-qdrant-shared-knowledge HTTP endpoint"
+  launcher: launchers/bridges/qdrant-shared-knowledge-bridge.sh
+  runtime: npx
+  image: "supergateway (client mode)"
+  baked: false
+  session_wired:
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Connects to http://localhost:8102/mcp via supergateway --streamableHttp.
+
+- name: valkey-bridge
+  description: "Stdio bridge to persistent mcp-valkey HTTP endpoint"
+  launcher: launchers/bridges/valkey-bridge.sh
+  runtime: npx
+  image: "supergateway (client mode)"
+  baked: false
+  session_wired:
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Connects to http://localhost:8110/mcp via supergateway --streamableHttp.
+
+- name: jaeger-bridge
+  description: "Stdio bridge to persistent mcp-jaeger HTTP endpoint"
+  launcher: launchers/bridges/jaeger-bridge.sh
+  runtime: npx
+  image: "supergateway (client mode)"
+  baked: false
+  session_wired:
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  notes: >
+    Connects to http://localhost:8120/mcp via supergateway --streamableHttp.
+
+# ---------------------------------------------------------------------------
 # REGISTRY METADATA
 # ---------------------------------------------------------------------------
-# Audited: 43 .sh files in ~/mcp-launchers/ (as of 2026-03-29)
+# Audited: 43 .sh files in ~/mcp-launchers/ + 5 bridge scripts (as of 2026-03-30)
 # Named MCP server entries: 40
+# Bridge entries: 5 (stdio-to-HTTP adapters for heraldstack-infra)
 # Internal dispatchers (not MCP entries): qdrant.sh, run.sh
 # Deprecated non-launchers: github-filter.py
-# Status: active=37, broken=1, deprecated=1
+# Status: active=42, broken=1, deprecated=1
+# Infrastructure-managed (heraldstack-infra): qdrant-writing, qdrant-inbox,
+#   qdrant-shared, valkey, live-trace-jaeger
 # Next: reconcile any new launchers added after this audit date.
