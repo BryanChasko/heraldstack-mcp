@@ -32,6 +32,38 @@
     "jupyter": {
       "command": "bash",
       "args": ["-c", "./mcp-launchers/run.sh jupyter.sh"]
+    },
+    "qdrant-writing": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-copywriting-bridge.sh"]
+    },
+    "qdrant-inbox": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-writing-inbox-bridge.sh"]
+    },
+    "qdrant-shared": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-shared-knowledge-bridge.sh"]
+    },
+    "valkey": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh valkey-bridge.sh"]
+    },
+    "qdrant-prompt-transcripts": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-prompt-transcripts-bridge.sh"]
+    },
+    "qdrant-agent-memory": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-agent-memory-bridge.sh"]
+    },
+    "qdrant-shannon-methodology": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-shannon-methodology-bridge.sh"]
+    },
+    "qdrant-verbal-ticks": {
+      "command": "bash",
+      "args": ["-c", "./mcp-launchers/run.sh qdrant-verbal-ticks-bridge.sh"]
     }
   }
 }
