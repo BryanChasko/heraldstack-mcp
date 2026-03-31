@@ -15,7 +15,7 @@ full rule set lives at: https://github.com/BryanChasko/heraldstack-mcp/blob/main
 
 - future-facing tense: "builds", "runs", "ships" -- not past tense
 - concise. revise to remove "and". no periods at end of readme paragraphs
-- no filler, no coded language (no "master", "spearheaded")
+- no filler, no coded language (no "primary/canonical", "drove/shipped")
 
 ## format
 
@@ -25,13 +25,13 @@ full rule set lives at: https://github.com/BryanChasko/heraldstack-mcp/blob/main
 
 ## banned verbal ticks
 
-"absolutely" "actual" "actually" "real" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
+"absolutely" "actually" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
 
 each agent has a redirection phrase -- see verbal-ticks-registry.md
 
 ## revision process
 
-1. get stream of consciousness out first
-2. revise for audience + future generations
-3. check against banned patterns above
-4. verify future-facing tone throughout
+- get stream of consciousness out first
+- revise for audience + future generations
+- check against banned patterns above
+- verify future-facing tone throughout

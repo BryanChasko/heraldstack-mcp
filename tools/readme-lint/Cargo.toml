@@ -1,0 +1,18 @@
+[package]
+name = "readme-lint"
+version = "0.1.0"
+edition = "2021"
+description = "heraldstack readme style validator -- checks banned words, emoji, list abuse, missing ascii headers"
+authors = ["Bryan Chasko"]
+
+[[bin]]
+name = "readme-lint"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+strip = true

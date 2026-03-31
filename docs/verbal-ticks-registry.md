@@ -17,7 +17,7 @@ when an agent would reach for a filler word, verbal tick, or expletive, they use
 | kerouac | all in the mind |
 | stratia | double rainbow... what does it even mean? |
 | tarn | metal never lies |
-| voss | proof that tony stark has a heart |
+| voss | suns gettin real low |
 | solan | hold for frame sync |
 | ralph-wiggum | tastes like burning |
 | myrren | - modem screech - |
