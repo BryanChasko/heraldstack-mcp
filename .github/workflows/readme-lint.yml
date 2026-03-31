@@ -1,0 +1,52 @@
+name: readme-lint
+
+# runs on any PR that touches markdown files
+# build readme-lint from source, validate all changed .md files
+# exit 1 on style violations -- blocked merge
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'tools/readme-lint/**'
+
+jobs:
+  lint:
+    name: heraldstack style check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: install rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: cache rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/readme-lint -> tools/readme-lint/target
+          cache-on-failure: true
+
+      - name: build readme-lint
+        run: cargo build --release --manifest-path tools/readme-lint/Cargo.toml
+
+      - name: get changed markdown files
+        id: changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/*.md'
+
+      - name: run readme-lint
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          echo "changed files: ${{ steps.changed.outputs.all_changed_files }}"
+          ./tools/readme-lint/target/release/readme-lint ${{ steps.changed.outputs.all_changed_files }}
+
+      - name: no markdown changes
+        if: steps.changed.outputs.any_changed == 'false'
+        run: echo "no markdown files changed -- skipping lint"
