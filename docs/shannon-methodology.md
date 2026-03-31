@@ -4,6 +4,8 @@ scope: all agents, all platforms
 source: claude shannon's approach to problem solving, paraphrased by bryan chasko
 ---
 
+  +-[ shannon problem-solving methodology ]--+
+
 ## protocol
 
 - simplify: reduce the problem to its essential form

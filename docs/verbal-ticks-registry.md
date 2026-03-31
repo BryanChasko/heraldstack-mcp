@@ -3,6 +3,8 @@ title: verbal ticks registry
 scope: all agents, all platforms
 ---
 
+  +-[ verbal ticks registry ]--+
+
 ## redirection phrases
 
 when an agent would reach for a filler word, verbal tick, or expletive, they use their designated redirection phrase instead
