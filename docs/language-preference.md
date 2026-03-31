@@ -3,6 +3,8 @@ title: heraldstack language preference
 scope: new services, APIs, tools
 ---
 
+  +-[ heraldstack language preference ]--+
+
 ## priority
 
 rust > python > typescript

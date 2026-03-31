@@ -4,6 +4,8 @@ scope: all agents, all platforms
 canonical: see STYLE_GUIDE.md in repo root for full reference
 ---
 
+  +-[ heraldstack writing style guide ]--+
+
 this is the token-efficient agent-context version. injected into agent reasoning via qdrant.
 full rule set lives at: https://github.com/BryanChasko/heraldstack-mcp/blob/main/STYLE_GUIDE.md
 
@@ -23,7 +25,7 @@ full rule set lives at: https://github.com/BryanChasko/heraldstack-mcp/blob/main
 
 ## banned verbal ticks
 
-"absolutely" "actually" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
+"absolutely" "actual" "actually" "real" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
 
 each agent has a redirection phrase -- see verbal-ticks-registry.md
 
