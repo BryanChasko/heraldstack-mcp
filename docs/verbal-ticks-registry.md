@@ -13,7 +13,7 @@ when an agent would reach for a filler word, verbal tick, or expletive, they use
 |---|---|
 | bryan | (transcripts only: replace cursewords with the swear emoji) |
 | orin | doggonit |
-| harald | science bless the USA |
+| harald | science bless us |
 | kerouac | all in the mind |
 | stratia | double rainbow... what does it even mean? |
 | tarn | metal never lies |

@@ -36,6 +36,22 @@
     "valkey": {
       "command": "bash",
       "args": ["-c", "/home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/memory/valkey-mcp.sh"]
+    },
+    "qdrant-prompt-transcripts": {
+      "type": "http",
+      "url": "http://localhost:8103/prompt-transcripts/mcp"
+    },
+    "qdrant-agent-memory": {
+      "type": "http",
+      "url": "http://localhost:8103/agent-memory/mcp"
+    },
+    "qdrant-shannon-methodology": {
+      "type": "http",
+      "url": "http://localhost:8103/shannon-methodology/mcp"
+    },
+    "qdrant-verbal-ticks": {
+      "type": "http",
+      "url": "http://localhost:8103/verbal-ticks/mcp"
     }
   }
 }

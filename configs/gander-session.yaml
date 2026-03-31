@@ -76,3 +76,35 @@ extensions:
     cmd: /home/bryanchasko/mcp-launchers/valkey-mcp.sh
     args: []
     timeout: 120
+
+  qdrant-prompt-transcripts:
+    enabled: true
+    type: stdio
+    name: qdrant-prompt-transcripts
+    cmd: /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/qdrant.sh
+    args: ["prompt-transcripts"]
+    timeout: 300
+
+  qdrant-agent-memory:
+    enabled: true
+    type: stdio
+    name: qdrant-agent-memory
+    cmd: /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/qdrant.sh
+    args: ["agent-memory"]
+    timeout: 300
+
+  qdrant-shannon-methodology:
+    enabled: true
+    type: stdio
+    name: qdrant-shannon-methodology
+    cmd: /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/qdrant.sh
+    args: ["shannon-methodology"]
+    timeout: 300
+
+  qdrant-verbal-ticks:
+    enabled: true
+    type: stdio
+    name: qdrant-verbal-ticks
+    cmd: /home/bryanchasko/code/heraldstack/heraldstack-mcp/launchers/core/qdrant.sh
+    args: ["verbal-ticks"]
+    timeout: 300
