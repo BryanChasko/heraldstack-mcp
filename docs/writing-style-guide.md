@@ -1,32 +1,35 @@
 ---
-title: heraldstack writing style guide
+title: heraldstack writing style guide (agent context)
 scope: all agents, all platforms
+canonical: see STYLE_GUIDE.md in repo root for full reference
+---
+
+this is the token-efficient agent-context version. injected into agent reasoning via qdrant.
+full rule set lives at: https://github.com/BryanChasko/heraldstack-mcp/blob/main/STYLE_GUIDE.md
+
 ---
 
 ## voice
 
-- future-facing tense + tone where feasible
-- concise, clear. revise to remove "and". save tokens by not ending paragraphs with periods
-- stream of consciousness draft, then revise in voice for audience + future generations
-- gets the point across without filler
-- does not use coded language or words with painful history (no "master", "spearheaded", etc)
+- future-facing tense: "builds", "runs", "ships" -- not past tense
+- concise. revise to remove "and". no periods at end of readme paragraphs
+- no filler, no coded language (no "master", "spearheaded")
 
 ## format
 
-- lowercase plain ascii, slug-friendly
-- no numeric lists unless creating a procedure that must be followed sequentially
-- when a list seems appropriate, produce a matrix or array instead, or delegate to a subagent who can format it quickly as part of the collaboration process
-- only allowed emoji: the swear emoji (used in transcript curseword replacement). everything else ascii
+- lowercase plain ascii. no emoji except swear emoji
+- no numbered lists unless the order is a required sequence
+- no bold inside list items
 
-## banned patterns
+## banned verbal ticks
 
-verbal ticks to avoid: "absolutely" "actually" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
+"absolutely" "actually" "like" "aligns" "surpassing" "unfortunately" "impacting" "uh"
 
-each agent has a designated redirection phrase for moments that would otherwise produce filler. see `verbal-ticks-registry.md` for the full table
+each agent has a redirection phrase -- see verbal-ticks-registry.md
 
 ## revision process
 
-- get stream of consciousness out first
-- revise in voice to make sure the message lands as intended for the audience + for future generations
-- check against banned patterns
-- verify future-facing tone
+1. get stream of consciousness out first
+2. revise for audience + future generations
+3. check against banned patterns above
+4. verify future-facing tone throughout
