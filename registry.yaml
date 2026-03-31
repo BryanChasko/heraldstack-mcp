@@ -52,8 +52,8 @@
   status: active
   notes: >
     Uses npx --prefer-offline to avoid network calls when cached.
-    Requires nvm-managed Node at /home/bryanchasko/.nvm/versions/node/v24.14.0/bin.
-    CLIENT_IP_ENCRYPTION_KEY sourced from ~/mcp-launchers/.env.
+    Requires nvm-managed Node at $NVM_BIN (set NVM_BIN=$(dirname $(nvm which node))).
+    CLIENT_IP_ENCRYPTION_KEY sourced from ~/.secrets.
 
 # ---------------------------------------------------------------------------
 # KNOWLEDGE — qdrant vector stores
@@ -121,6 +121,115 @@
     Native streamable-http transport (fastmcp 2.7.0).
     Claude Code: type http. Goose/kiro/gemini: bridge launcher (supergateway client).
     Legacy launcher retained for fallback.
+
+# --- multi-collection container (port 8103, path-routed) ---
+
+- name: qdrant-prompt-transcripts
+  description: "Qdrant MCP — prompt-transcripts collection (raw + edited bryan prompts)"
+  launcher: null
+  runtime: docker
+  image: qdrant-mcp-multi:latest
+  baked: true
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+    - ibeji
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-multi
+  transport:
+    http: "http://localhost:8103/prompt-transcripts/mcp"
+    bridge: launchers/bridges/qdrant-prompt-transcripts-bridge.sh
+  notes: >
+    Path-routed via nginx in mcp-qdrant-multi container.
+    Shares port 8103 with agent-memory, shannon-methodology, verbal-ticks.
+
+- name: qdrant-agent-memory
+  description: "Qdrant MCP — agent-memory collection (cross-agent shared memory)"
+  launcher: null
+  runtime: docker
+  image: qdrant-mcp-multi:latest
+  baked: true
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+    - ibeji
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-multi
+  transport:
+    http: "http://localhost:8103/agent-memory/mcp"
+    bridge: launchers/bridges/qdrant-agent-memory-bridge.sh
+  notes: >
+    Path-routed via nginx in mcp-qdrant-multi container.
+    Cross-agent decisions, preferences, session summaries.
+
+- name: qdrant-shannon-methodology
+  description: "Qdrant MCP — shannon-methodology collection (problem-solving patterns)"
+  launcher: null
+  runtime: docker
+  image: qdrant-mcp-multi:latest
+  baked: true
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+    - ibeji
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-multi
+  transport:
+    http: "http://localhost:8103/shannon-methodology/mcp"
+    bridge: launchers/bridges/qdrant-shannon-methodology-bridge.sh
+  notes: >
+    Path-routed via nginx in mcp-qdrant-multi container.
+    Claude Shannon problem-solving methodology + worked examples.
+
+- name: qdrant-verbal-ticks
+  description: "Qdrant MCP — verbal-ticks collection (agent identity + redirection phrases)"
+  launcher: null
+  runtime: docker
+  image: qdrant-mcp-multi:latest
+  baked: true
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+    - ibeji
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-qdrant-multi
+  transport:
+    http: "http://localhost:8103/verbal-ticks/mcp"
+    bridge: launchers/bridges/qdrant-verbal-ticks-bridge.sh
+  notes: >
+    Path-routed via nginx in mcp-qdrant-multi container.
+    Agent verbal tick registry + writing style enforcement context.
+
+- name: heraldstack-cache-proxy
+  description: "Rust cache-through proxy for qdrant MCP servers with valkey caching"
+  launcher: null
+  runtime: docker
+  image: heraldstack-cache-proxy:latest
+  baked: false
+  session_wired: []
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: heraldstack-cache-proxy
+  transport:
+    http: "http://localhost:8200"
+  notes: >
+    Intercepts qdrant-find calls across all 7 collections, checks valkey cache first.
+    Invalidates cache on qdrant-store. Routes by path prefix to backend MCP servers.
+    All collections accessible via http://localhost:8200/{collection}/mcp.
+    128MB memory limit. 3.6MB rust binary (tokio + axum + reqwest + redis).
 
 - name: qdrant-otel-expert
   description: "Qdrant MCP — otel-expert collection (OTel tracing knowledge base)"
@@ -224,7 +333,7 @@
   env_required: []
   status: active
   notes: >
-    Executes local clone at /home/bryanchasko/code/mcp-openrouter/src/index.js.
+    Executes local clone at $HOME/code/mcp-openrouter/src/index.js.
     Source: https://github.com/Hulupeep/mcp-openrouter.
     No API key required — reads OpenRouter public catalog.
 
@@ -233,7 +342,7 @@
 # ---------------------------------------------------------------------------
 
 - name: rocm-filesystem
-  description: "Filesystem MCP — /home/bryanchasko/code mounted at /projects/code"
+  description: "Filesystem MCP — $HOME/code mounted at /projects/code"
   launcher: launchers/filesystem/filesystem-rocm-code.sh
   runtime: docker
   image: mcp/filesystem:latest
@@ -244,11 +353,11 @@
   env_required: []
   status: active
   notes: >
-    Mounts /home/bryanchasko/code into container as /projects/code.
+    Mounts $HOME/code into container as /projects/code.
     Registry pull: mcp/filesystem:latest.
 
 - name: macmini-filesystem
-  description: "Filesystem MCP — Mac mini /Users/bryanchasko via sshfs + npx"
+  description: "Filesystem MCP — Mac mini /Users/$USER via sshfs + npx"
   launcher: launchers/filesystem/filesystem-macmini.sh
   runtime: sshfs+npx
   image: "@modelcontextprotocol/server-filesystem"
@@ -259,8 +368,8 @@
   env_required: []
   status: active
   notes: >
-    Mounts Bryans-Mac-mini.local via sshfs to /mnt/mac-mini before starting npx server.
-    SSH key: /home/bryanchasko/.ssh/id_ed25519.
+    Mounts ${MAC_MINI_HOST} via sshfs to /mnt/mac-mini before starting npx server.
+    SSH key: $HOME/.ssh/id_ed25519.
     Will fail silently if Mac mini is unreachable — no retry logic.
     Serves /mnt/mac-mini/Code.
 
@@ -280,7 +389,7 @@
     Consolidation candidate with filesystem-chrome-extension — same roots.
 
 - name: filesystem-design-web
-  description: "Filesystem MCP — Mac mini /Code and /home/bryanchasko (design+web recipe)"
+  description: "Filesystem MCP — Mac mini /Code and $HOME (design+web recipe)"
   launcher: launchers/filesystem/filesystem-design-web.sh
   runtime: npx
   image: "@modelcontextprotocol/server-filesystem"
@@ -289,7 +398,7 @@
   env_required: []
   status: active
   notes: >
-    On-demand for design/web recipe sessions. Serves two roots: /mnt/mac-mini and /home/bryanchasko.
+    On-demand for design/web recipe sessions. Serves two roots: /mnt/mac-mini and $HOME.
     Assumes /mnt/mac-mini already mounted.
     Uses npx --prefer-offline.
 
@@ -479,7 +588,7 @@
   status: active
   notes: >
     On-demand. Uses baked local image sqlite-mcp:latest.
-    DB: /home/bryanchasko/code/learning/deep-agents-from-scratch/data/mcp_shared/agents.db.
+    DB: $HOME/code/learning/deep-agents-from-scratch/data/mcp_shared/agents.db.
     Build: docker build -f gandergoosecli/Dockerfile.sqlite-mcp -t sqlite-mcp:latest.
 
 # ---------------------------------------------------------------------------
@@ -731,7 +840,7 @@
   notes: >
     NOT a standalone MCP server. The haunting platform dispatcher.
     On rocm-aibox: executes the named script locally.
-    On other machines: SSH-tunnels to bryanchasko@rocm-aibox.local.
+    On other machines: SSH-tunnels to ${AIBOX_SSH_HOST} (set in ~/.secrets).
     hauntingkirocli .mcp.json wraps all entries as: run.sh <launcher-name>.
 
 # ---------------------------------------------------------------------------
