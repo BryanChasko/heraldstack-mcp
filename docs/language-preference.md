@@ -1,6 +1,7 @@
 ---
 title: heraldstack language preference
 scope: new services, APIs, tools
+updated: 2026-03-31
 ---
 
   +-[ heraldstack language preference ]--+
