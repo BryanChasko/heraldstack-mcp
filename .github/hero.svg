@@ -1,0 +1,93 @@
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes plug-insert {
+        0% { transform: translateX(-10px); opacity: 0.5; }
+        50% { transform: translateX(0px); opacity: 1; }
+        100% { transform: translateX(-10px); opacity: 0.5; }
+      }
+      @keyframes handshake-flow {
+        0% { stroke-dashoffset: 40; opacity: 0.3; }
+        50% { stroke-dashoffset: 0; opacity: 0.9; }
+        100% { stroke-dashoffset: -40; opacity: 0.3; }
+      }
+      @keyframes grid-fade {
+        0% { opacity: 0.05; }
+        50% { opacity: 0.12; }
+        100% { opacity: 0.05; }
+      }
+      .plug { animation: plug-insert 2.5s ease-in-out infinite; }
+      .flow { animation: handshake-flow 2s ease-in-out infinite; }
+      .grid { animation: grid-fade 4s ease-in-out infinite; }
+    </style>
+    <pattern id="grid" patternUnits="userSpaceOnUse" width="40" height="40">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#58a6ff" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="800" height="200" fill="#0d1117"/>
+
+  <!-- Grid pattern -->
+  <rect width="800" height="200" fill="url(#grid)" class="grid"/>
+
+  <!-- Left socket -->
+  <g opacity="0.9">
+    <rect x="120" y="75" width="60" height="50" rx="4" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <!-- Socket holes -->
+    <circle cx="135" cy="90" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="165" cy="90" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="135" cy="115" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="165" cy="115" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <!-- Label -->
+    <text x="150" y="145" font-family="monospace" font-size="10" text-anchor="middle" fill="#58a6ff" opacity="0.6">server</text>
+  </g>
+
+  <!-- Left plug (animated) -->
+  <g class="plug">
+    <rect x="200" y="80" width="50" height="40" rx="3" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <!-- Plug pins -->
+    <circle cx="210" cy="90" r="2.5" fill="#58a6ff"/>
+    <circle cx="235" cy="90" r="2.5" fill="#58a6ff"/>
+    <circle cx="210" cy="110" r="2.5" fill="#58a6ff"/>
+    <circle cx="235" cy="110" r="2.5" fill="#58a6ff"/>
+  </g>
+
+  <!-- Data flow lines -->
+  <g class="flow">
+    <path d="M 260 90 Q 350 60 400 80" fill="none" stroke="#58a6ff" stroke-width="2" stroke-dasharray="20,10"/>
+    <path d="M 260 110 Q 350 140 400 120" fill="none" stroke="#58a6ff" stroke-width="2" stroke-dasharray="20,10"/>
+  </g>
+
+  <!-- Center hub (protocol intersection) -->
+  <g opacity="0.95">
+    <circle cx="400" cy="100" r="20" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <circle cx="400" cy="100" r="12" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.6"/>
+    <circle cx="400" cy="100" r="4" fill="#58a6ff"/>
+  </g>
+
+  <!-- Right plug (animated, offset) -->
+  <g class="plug" style="animation-delay: 0.3s">
+    <rect x="550" y="80" width="50" height="40" rx="3" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <circle cx="560" cy="90" r="2.5" fill="#58a6ff"/>
+    <circle cx="585" cy="90" r="2.5" fill="#58a6ff"/>
+    <circle cx="560" cy="110" r="2.5" fill="#58a6ff"/>
+    <circle cx="585" cy="110" r="2.5" fill="#58a6ff"/>
+  </g>
+
+  <!-- Right socket -->
+  <g opacity="0.9">
+    <rect x="620" y="75" width="60" height="50" rx="4" fill="none" stroke="#58a6ff" stroke-width="2"/>
+    <circle cx="635" cy="90" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="665" cy="90" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="635" cy="115" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <circle cx="665" cy="115" r="3" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+    <!-- Label -->
+    <text x="650" y="145" font-family="monospace" font-size="10" text-anchor="middle" fill="#58a6ff" opacity="0.6">client</text>
+  </g>
+
+  <!-- Text: repo name -->
+  <text x="400" y="155" font-family="monospace" font-size="20" font-weight="bold" text-anchor="middle" fill="#58a6ff" opacity="0.9">
+    heraldstack-mcp
+  </text>
+</svg>
