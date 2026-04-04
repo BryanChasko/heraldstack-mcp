@@ -7,4 +7,4 @@ if ! mountpoint -q /mnt/mac-mini; then
     -o IdentityFile=/home/bryanchasko/.ssh/id_ed25519
 fi
 export PATH="/home/bryanchasko/.nvm/versions/node/v24.14.0/bin:$PATH"
-exec npx -y @modelcontextprotocol/server-filesystem /mnt/mac-mini/Code
+exec npx -y @modelcontextprotocol/server-filesystem /mnt/mac-mini/Code /mnt/mac-mini/Library/LaunchAgents /mnt/mac-mini/.chrome-launch-daemon
