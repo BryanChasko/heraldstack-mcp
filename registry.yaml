@@ -39,10 +39,10 @@
 
 - name: context7
   description: "Context7 library documentation MCP — real-time SDK and framework docs"
-  launcher: launchers/core/context7.sh
-  runtime: npx
-  image: "@upstash/context7-mcp"
-  baked: false
+  launcher: launchers/bridges/context7-bridge.sh
+  runtime: docker
+  image: context7-mcp-http:latest
+  baked: true
   session_wired:
     - shannon
     - haunting
@@ -50,10 +50,41 @@
   env_required:
     - CLIENT_IP_ENCRYPTION_KEY
   status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-context7
+  transport:
+    http: "http://localhost:8130/mcp"
+    healthcheck: "http://localhost:8130/healthz"
+    bridge: launchers/bridges/context7-bridge.sh
   notes: >
-    Uses npx --prefer-offline to avoid network calls when cached.
-    Requires nvm-managed Node at $NVM_BIN (set NVM_BIN=$(dirname $(nvm which node))).
-    CLIENT_IP_ENCRYPTION_KEY sourced from ~/.secrets.
+    Persistent streamable-http MCP endpoint via heraldstack-infra.
+    Wrapped by supergateway inside the baked Docker image.
+    Codex and Goose connect directly over HTTP. Command-only lanes use
+    the dockerized stdio bridge.
+
+- name: goose-docs
+  description: "goose documentation MCP — self-docs, recipes, extensions, and CLI guidance"
+  launcher: launchers/bridges/goose-docs-bridge.sh
+  runtime: docker
+  image: goose-docs-mcp-http:latest
+  baked: true
+  session_wired:
+    - shannon
+    - haunting
+    - gander
+  env_required: []
+  status: active
+  managed_by: heraldstack-infra
+  container_name: mcp-goose-docs
+  transport:
+    http: "http://localhost:8131/mcp"
+    healthcheck: "http://localhost:8131/healthz"
+    bridge: launchers/bridges/goose-docs-bridge.sh
+  notes: >
+    Persistent streamable-http MCP endpoint via heraldstack-infra.
+    Uses mcp-remote against https://block.gitmcp.io/goose/ per upstream goose docs.
+    Codex and Goose connect directly over HTTP. Command-only lanes use
+    the dockerized stdio bridge.
 
 # ---------------------------------------------------------------------------
 # KNOWLEDGE — qdrant vector stores
@@ -774,24 +805,23 @@
     Build required before first use.
 
 # ---------------------------------------------------------------------------
-# BROKEN
+# UTILS
 # ---------------------------------------------------------------------------
 
 - name: docker-mcp
-  description: "Docker container management MCP"
-  launcher: launchers/broken/docker-mcp.sh
-  runtime: broken
-  image: mcp/docker
+  description: "Docker container management MCP — list, inspect, logs, start/stop containers"
+  launcher: launchers/utils/docker-mcp.sh
+  runtime: uvx
+  image: null
   baked: false
-  session_wired: []
+  session_wired:
+    - shannon
   env_required: []
-  status: broken
+  status: active
   notes: >
-    BROKEN on Linux Docker Engine (without Docker Desktop).
-    babashka.curl NPE at startup: curl Nix-resolved at image build time to a
-    non-existent store path on Linux Engine.
-    Workaround requires Docker Desktop 4.59+ MCP Toolkit or docker mcp gateway run.
-    Do NOT add to prod configs until fixed.
+    Uses ckreiling/mcp-server-docker (PyPI) via uvx. Talks to /var/run/docker.sock.
+    Replaced the broken mcp/docker image (babashka.curl NPE on Linux Engine).
+    No Docker Desktop required — works on baremetal Linux with docker socket.
 
 # ---------------------------------------------------------------------------
 # DEPRECATED
